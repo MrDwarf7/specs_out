@@ -54,7 +54,20 @@ typedef u64 qword; // 64-bit  == same as unsigned long long
 
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
-#define PREFETCH(addr) __builtin_prefetch(addr)
+#define PREFETCH(addr) __builtin_prefetch((addr), 0, 1)
+
+#define ATTR_PACKED              __attribute__((packed))
+#define ATTR_ALIGNED(n)          __attribute__((aligned(n)))
+#define ATTR_PACKED_ALIGNED(n)   __attribute__((packed, aligned(n)))
+#define ATTR_HOT                 __attribute__((hot))
+#define ATTR_COLD                __attribute__((cold))
+#define ATTR_PURE                __attribute__((pure))
+#define ATTR_CONSTFN             __attribute__((const))
+#define ATTR_NONNULL(...)        __attribute__((nonnull(__VA_ARGS__)))
+#define ATTR_ALLOC_SIZE(...)     __attribute__((alloc_size(__VA_ARGS__)))
+#define ATTR_RETURNS_NONNULL     __attribute__((returns_nonnull))
+#define ATTR_ALWAYS_INLINE       __attribute__((always_inline)) static inline
+#define ATTR_RESTRICT            restrict
 
 #define ZERO_MEMORY(ptr, size) memset((ptr), 0, (size))
 #define SET_MEMORY(ptr, value, size) memset((ptr), (value), (size))
