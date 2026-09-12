@@ -14,15 +14,15 @@
  */
 typedef enum {
   SUITE_ALL,
-  /* -- add new suites here -- */
+  SUITE_PARSE,
+  SUITE_FORMAT,
+  SUITE_CLI,
+  SUITE_CAPTURE,
 } TestSuite;
 
-/*
- * Suite runner functions - implement in separate test_*.c files
- *
- * Add prototypes for new suites here as they are created.
- */
-
-/* -- add prototypes here -- */
+void run_parse_tests(void);
+void run_format_tests(void);
+void run_cli_tests(void);
+void run_capture_tests(void);
 
 #endif /* TEST_SUITES_H */
