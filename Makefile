@@ -185,7 +185,10 @@ clean:
 check:
 	$(Q)printf "Running cppcheck on $(SRC_SOURCES)\n"
 	$(Q)cppcheck --enable=all --suppress=missingIncludeSystem --force \
-										--inconclusive --std=$(CPPCHECK_VERSION) $(SRC_SOURCES)
+										--inconclusive --std=$(CPPCHECK_VERSION) \
+										--suppress=staticFunction:src/parse.c \
+										--suppress=unusedFunction:src/prelude.h \
+										$(SRC_SOURCES)
 
 reset:
 	$(Q)printf "Resetting build environment...\n"
@@ -245,7 +248,16 @@ TEST_OBJ_DIR  = $(BUILD_DIR)/test_obj
 
 # Project-specific test sources — list test_*.c files + any src/ files they need
 TEST_MAIN_SRCS = \
-	test/test_main.c
+	test/test_main.c \
+	test/test_parse.c \
+	test/test_format.c \
+	test/test_cli.c \
+	test/test_capture.c \
+	src/arena.c \
+	src/parse.c \
+	src/format.c \
+	src/cli.c \
+	src/capture.c
 
 TEST_OBJECTS = $(patsubst %, $(TEST_OBJ_DIR)/%, $(TEST_MAIN_SRCS:%=%.o))
 
@@ -322,6 +334,90 @@ rr: run_release
 # testing
 t: test
 
+test-parse: $(TEST_MAIN_BIN)
+	$(Q)$(TEST_MAIN_BIN) parse
+
+test-format: $(TEST_MAIN_BIN)
+	$(Q)$(TEST_MAIN_BIN) format
+
+test-cli: $(TEST_MAIN_BIN)
+	$(Q)$(TEST_MAIN_BIN) cli
+
+test-capture: $(TEST_MAIN_BIN)
+	$(Q)$(TEST_MAIN_BIN) capture
+
+# Launch the real binary with argv. OUT= must be set for dry/write/clobber.
+# Never invoke the binary with no dest: that would clobber $$HOME/.specs.
+run-help: build_debug
+	$(Q)$(BUILD_DIR)/$(PROJECT_NAME)$(EXE_EXT) --help
+
+run-dry: build_debug
+	$(Q)if [ -z "$(OUT)" ]; then printf "run-dry requires OUT=path\n" >&2; exit 2; fi
+	$(Q)$(BUILD_DIR)/$(PROJECT_NAME)$(EXE_EXT) --dry-run -o "$(OUT)"
+
+run-write: build_debug
+	$(Q)if [ -z "$(OUT)" ]; then printf "run-write requires OUT=path\n" >&2; exit 2; fi
+	$(Q)$(BUILD_DIR)/$(PROJECT_NAME)$(EXE_EXT) -t -o "$(OUT)"
+
+run-clobber: build_debug
+	$(Q)if [ -z "$(OUT)" ]; then printf "run-clobber requires OUT=path\n" >&2; exit 2; fi
+	$(Q)$(BUILD_DIR)/$(PROJECT_NAME)$(EXE_EXT) -o "$(OUT)" < /dev/null
+
+# Already-built launchers for hyperfine. Build first with `make b`, `make br`, `make t`.
+# These skip format/rebuild so the measurement is the program, not clang-format.
+BENCH_DEBUG = ./build/$(PROJECT_NAME)$(EXE_EXT)
+BENCH_REL   = ./build_rel/$(PROJECT_NAME)$(EXE_EXT)
+BENCH_TEST  = ./build/test/test_main
+
+bench-debug-help:
+	@$(BENCH_DEBUG) --help >/dev/null 2>&1
+
+bench-debug-dry:
+	$(Q)if [ -z "$(OUT)" ]; then printf "bench-debug-dry requires OUT=path\n" >&2; exit 2; fi
+	@$(BENCH_DEBUG) --dry-run -o "$(OUT)" >/dev/null 2>&1
+
+bench-debug-write:
+	$(Q)if [ -z "$(OUT)" ]; then printf "bench-debug-write requires OUT=path\n" >&2; exit 2; fi
+	@$(BENCH_DEBUG) -t -o "$(OUT)" >/dev/null 2>&1
+
+bench-rel-help:
+	@$(BENCH_REL) --help >/dev/null 2>&1
+
+bench-rel-dry:
+	$(Q)if [ -z "$(OUT)" ]; then printf "bench-rel-dry requires OUT=path\n" >&2; exit 2; fi
+	@$(BENCH_REL) --dry-run -o "$(OUT)" >/dev/null 2>&1
+
+bench-rel-write:
+	$(Q)if [ -z "$(OUT)" ]; then printf "bench-rel-write requires OUT=path\n" >&2; exit 2; fi
+	@$(BENCH_REL) -t -o "$(OUT)" >/dev/null 2>&1
+
+bench-test:
+	@$(BENCH_TEST) >/dev/null
+
+bench-test-parse:
+	@$(BENCH_TEST) parse >/dev/null
+
+bench-test-format:
+	@$(BENCH_TEST) format >/dev/null
+
+bench-test-cli:
+	@$(BENCH_TEST) cli >/dev/null
+
+bench-test-capture:
+	@$(BENCH_TEST) capture >/dev/null
+
+perf:
+	$(Q)bash scripts/perf-hyperfine.sh
+
+dump-asm: build_debug
+	$(Q)objdump -d $(BUILD_DIR)/$(PROJECT_NAME)$(EXE_EXT)
+
+dump-s: build_debug
+	$(Q)$(MKDIR) $(BUILD_DIR)/asm
+	$(Q)$(CC) $(CFLAGS) -S -o $(BUILD_DIR)/asm/parse.s src/parse.c
+	$(Q)$(CC) $(CFLAGS) -S -o $(BUILD_DIR)/asm/capture.s src/capture.c
+	$(Q)$(CC) $(CFLAGS) -S -o $(BUILD_DIR)/asm/format.s src/format.c
+
 cl: clean
 c: check
 res: reset
@@ -348,6 +444,28 @@ a: build_debug build_release test
 	run_release \
 	test \
 	test_main \
+	test-parse \
+	test-format \
+	test-cli \
+	test-capture \
+	run-help \
+	run-dry \
+	run-write \
+	run-clobber \
+	dump-asm \
+	dump-s \
+	bench-debug-help \
+	bench-debug-dry \
+	bench-debug-write \
+	bench-rel-help \
+	bench-rel-dry \
+	bench-rel-write \
+	bench-test \
+	bench-test-parse \
+	bench-test-format \
+	bench-test-cli \
+	bench-test-capture \
+	perf \
 	b br r rr f cl c res h a
 
 # Include dependency files
