@@ -1,0 +1,33 @@
+# docker-compose for specs_out dev environment
+#
+# Usage:
+#   docker compose run --rm build      # clean build + test
+#   docker compose run --rm shell      # interactive dev shell
+#   docker compose run --rm format     # run clang-format
+#   docker compose run --rm tidy       # run clang-tidy
+
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ..:/project
+    working_dir: /project
+
+  build:
+    extends: dev
+    command: make cl && make a
+
+  shell:
+    extends: dev
+    stdin_open: true
+    tty: true
+
+  format:
+    extends: dev
+    command: clang-format -i src/*.c src/*.h test/*.c test/*.h
+
+  tidy:
+    extends: dev
+    command: clang-tidy src/*.c -p build

@@ -1,0 +1,38 @@
+# Version control
+.jj/
+.git/
+
+# Build artifacts
+build/
+build_rel/
+.build/
+
+# Old backups
+.prev/
+.old/
+old/
+
+# Agent files
+.hermes/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Vim swap files
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Environment files (secrets)
+.env
+.env.*
+
+# Project docs (not needed for Docker build)
+docs/
+
+# Output products
+*.o
+*.d

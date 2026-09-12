@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  PROJECT_NAME: specs_out
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        build_type: [debug, release]
+
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    if: ${{ !contains(github.event.head_commit.message, 'skip ci') }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update && sudo apt install -y \
+            build-essential \
+            gcc-14 \
+            cppcheck \
+            clang-format
+
+      - name: Format check
+        if: matrix.build_type == 'debug'
+        run: make format && git diff --exit-code || (
+          echo "::error::Code is not formatted. Run 'make format' and commit.";
+          exit 1)
+
+      - name: Build (${{ matrix.build_type }})
+        run: make BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Run unit tests (${{ matrix.build_type }})
+        run: make test
+
+      - name: Static analysis
+        if: matrix.build_type == 'debug'
+        run: make check

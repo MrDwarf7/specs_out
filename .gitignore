@@ -1,0 +1,64 @@
+# Build artifacts
+build
+build/
+build/*
+
+build_rel
+build_rel/
+build_rel/*
+
+dist/
+dist/*
+dist/**/*
+
+# Old backups / prev
+.old
+.old/
+old
+old/
+old/*
+
+.prev
+.prev/
+.prev/**/*
+prev
+prev/
+prev/*
+
+.bak/
+.bak/*
+.bak/**/*
+
+# Underscore-prefixed dirs (scratch/notes)
+_*
+_*/
+_*/**/*
+
+# JJ VCS internals (managed by jj, not git)
+.jj/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Vim swap
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# clangd cache dir (not the .clangd config file at root)
+.clangd/
+
+# Windows debug symbols
+*.pdb
+
+# IDE
+.idea/
+.idea/*
+.idea/**/*
+
+# Env files
+.env
+.env.*

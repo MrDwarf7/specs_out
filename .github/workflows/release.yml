@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  PROJECT_NAME: specs_out
+
+jobs:
+  build-test-release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update && sudo apt install -y \
+            build-essential \
+            gcc-14
+
+      - name: Format check
+        run: make format && git diff --exit-code || (
+          echo "::error::Code is not formatted. Run 'make format' and commit.";
+          exit 1)
+
+      - name: Build release binary
+        run: make build_release
+
+      - name: Run unit tests
+        run: make test
+
+      - name: Package binary
+        run: make release
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: dist/${PROJECT_NAME}-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

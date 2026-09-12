@@ -1,0 +1,55 @@
+# .clang-tidy config for crusty
+#
+# Runs the most useful static analysis checks by default, suppressing ones that
+# are noisy for typical C projects (magic numbers, function cognitive complexity,
+# etc.). Adjust the CheckOptions at the bottom for project-specific tuning.
+Checks: |
+  -*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  clang-analyzer-*,
+  modernize-*,
+  readability-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  -clang-analyzer-security.insecureAPI.UnsafeBufferHandling,
+  -clang-analyzer-security.VAList,
+  -clang-analyzer-security.ArrayBound,
+  -clang-analyzer-deadcode.DeadStores,
+  -bugprone-reserved-identifier,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-branch-clone,
+  -clang-diagnostic-macro-redefined,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-macro-to-enum,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -modernize-macro-to-enum,
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity,
+  -readability-braces-around-statements,
+  -readability-implicit-bool-conversion,
+  -readability-identifier-length,
+  -cppcoreguidelines-init-variables,
+  -bugprone-not-null-terminated-result,
+  -bugprone-narrowing-conversions,
+  -readability-function-size,
+
+WarningsAsErrors: 'readability-braces-around-statements'
+HeaderFilterRegex: '^(src|test)/'
+FormatStyle: file
+
+ExtraArgs:
+  - '-std=c23'
+  - '-D_GNU_SOURCE'
+  - '-I./src'
+  - '-I./libs'
+
+CheckOptions:
+  - key: readability-magic-numbers.IgnoredFloatingPointValues
+    value: "0.0;1.0;100.0;"
+  - key: readability-magic-numbers.IgnoredIntegerValues
+    value: "0;1;2;3;4;5;6;7;8;9;"
+    # Line count is from the `)` / `else` / `do` to the end of the body.
+    # 0 lines (same-line `if (cond) stmt;`) is allowed.
+    # 1+ lines (hanging body, if-else, for/while) must have braces.
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: '1'

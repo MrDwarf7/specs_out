@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - -std=c23
+    - -xc
+  # Force C language for header files (clangd defaults to ObjC++)
+  Compiler: gcc
