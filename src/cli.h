@@ -1,7 +1,6 @@
 #ifndef SPECS_CLI_H
 #define SPECS_CLI_H
 
-#include "arena.h"
 #include "prelude.h"
 
 #include <stdalign.h>
@@ -9,7 +8,7 @@
 
 /*
  * ## Summary
- * Parsed CLI flags. `dest` points at argv or at `default_dest`.
+ * Parsed CLI flags. `dest` points at argv, or is null for stdout.
  *
  */
 typedef struct {
@@ -39,25 +38,14 @@ typedef enum {
 
 /*
  * ## Summary
- * Build `$HOME/.specs` into the arena.
- *
- * ## Returns
- * `true` when `home` is non-empty,
- * `false` when HOME is missing.
- *
- */
-bool specs_default_dest(Arena *arena, const c8 *home, c8 **out);
-
-/*
- * ## Summary
- * Parse argv into `out`. Does not exit.
+ * Parse argv into `out`. Does not exit. No destination selects stdout.
  *
  * ## Returns
  * `true` when args are usable (including `--help`),
  * `false` on unknown flag or missing `-o` argument.
  *
  */
-bool specs_parse_args(i32 argc, c8 **argv, const c8 *default_dest, SpecsCli *out);
+bool specs_parse_args(i32 argc, c8 **argv, SpecsCli *out);
 
 /*
  * ## Summary
@@ -84,9 +72,9 @@ bool specs_answer_is_yes(const c8 *answer);
 
 /*
  * ## Summary
- * Write the original usage text to `out`.
+ * Write usage text to `out`.
  *
  */
-void specs_usage(const c8 *program, const c8 *default_dest, FILE *out);
+void specs_usage(const c8 *program, FILE *out);
 
 #endif /* SPECS_CLI_H */

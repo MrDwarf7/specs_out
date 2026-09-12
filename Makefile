@@ -347,7 +347,7 @@ test-capture: $(TEST_MAIN_BIN)
 	$(Q)$(TEST_MAIN_BIN) capture
 
 # Launch the real binary with argv. OUT= must be set for dry/write/clobber.
-# Never invoke the binary with no dest: that would clobber $$HOME/.specs.
+# No-destination launches print to stdout without writing a file.
 run-help: build_debug
 	$(Q)$(BUILD_DIR)/$(PROJECT_NAME)$(EXE_EXT) --help
 

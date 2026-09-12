@@ -24,7 +24,6 @@
 #define DIRFD_NONE        (-1)
 #define BUF_INITIAL_CAP   ((usize)64)
 
-#define DEFAULT_SPECS_NAME ".specs"
 #define ERR_PREFIX         "[ERR] "
 
 #define SKIP_ZRAM  "zram"

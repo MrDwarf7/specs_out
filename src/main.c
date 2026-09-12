@@ -21,45 +21,48 @@ static bool prompt_yes(
   return specs_answer_is_yes(answer);
 }
 
+/*
+ * ## Summary
+ * Print the buffered report and detect write or flush failures.
+ *
+ * ## Returns
+ * Returns after flushing stdout, or exits on an output error.
+ *
+ */
+static void print_document(
+  const c8 *doc
+) {
+  /* The complete report is already buffered in the document arena. */
+  usize doc_len = strlen(doc);
+  if (fwrite(doc, 1, doc_len, stdout) != doc_len || fflush(stdout) != 0) { specs_die("could not write stdout: %s", strerror(errno)); }
+}
+
 i32 main(
   i32 argc, c8 **argv
 ) {
   specs_runtime_init();
-  Arena *arena           = specs_doc_arena();
-
-  c8       *default_dest = nullptr;
-  const c8 *home         = getenv("HOME");
-  if (!specs_default_dest(arena, home, &default_dest)) {
-    bool needs_default = true;
-    for (i32 idx = 1; idx < argc; idx++) {
-      if (strcmp(argv[idx], "-h") == 0 || strcmp(argv[idx], "--help") == 0) { specs_die("HOME is not set; pass -o PATH"); }
-      if (strcmp(argv[idx], "-o") == 0 || strcmp(argv[idx], "--output") == 0) needs_default = false;
-      if (argv[idx][0] != '-') needs_default = false;
-    }
-    if (needs_default) specs_die("HOME is not set; pass -o PATH");
-    default_dest = arena_copy_str(arena, "");
-  }
+  Arena *arena = specs_doc_arena();
 
   SpecsCli cli = {};
-  if (!specs_parse_args(argc, argv, default_dest, &cli)) {
+  if (!specs_parse_args(argc, argv, &cli)) {
     if (cli.missing_arg) specs_die("Option %s requires an argument", cli.opt_name);
     fprintf(stderr, ERR_PREFIX "Unknown flag: %s\n", cli.unknown ? cli.unknown : "");
-    specs_usage(argv[0], default_dest, stdout);
+    specs_usage(argv[0], stdout);
     specs_runtime_fini();
     return EXIT_FAILURE;
   }
   if (cli.help) {
-    specs_usage(argv[0], default_dest, stdout);
+    specs_usage(argv[0], stdout);
     specs_runtime_fini();
     return 0;
   }
 
-  const c8 *dest = cli.dest ? cli.dest : default_dest;
+  const c8 *dest = cli.dest;
   const c8 *doc  = specs_gather_document(arena);
 
-  if (cli.dry_run) {
-    fprintf(stderr, "[DRY] would write to %s\n", dest);
-    fputs(doc, stdout);
+  if (!dest || cli.dry_run) {
+    if (cli.dry_run && dest) fprintf(stderr, "[DRY] would write to %s\n", dest);
+    print_document(doc);
     specs_runtime_fini();
     return 0;
   }
@@ -70,7 +73,7 @@ i32 main(
   if (confirm == SPECS_REFUSE) specs_die("%s exists; pass -t or -y to replace", dest);
   if (confirm == SPECS_PROMPT && !prompt_yes(dest)) {
     fprintf(stderr, "Not writing %s\n", dest);
-    fputs(doc, stdout);
+    print_document(doc);
     specs_runtime_fini();
     return 0;
   }

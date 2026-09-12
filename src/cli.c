@@ -4,23 +4,11 @@
 
 #include <string.h>
 
-bool specs_default_dest(
-  Arena *arena, const c8 *home, c8 **out
-) {
-  if (!home || !home[0] || !out) return false;
-  Buf path;
-  buf_init(&path, arena);
-  buf_printf(&path, "%s/%s", home, DEFAULT_SPECS_NAME);
-  *out = path.data;
-  return true;
-}
-
 bool specs_parse_args(
-  i32 argc, c8 **argv, const c8 *default_dest, SpecsCli *out
+  i32 argc, c8 **argv, SpecsCli *out
 ) {
   if (!out) return false;
   ZERO_MEMORY(out, sizeof(*out));
-  out->dest = default_dest;
   if (argc < 1 || !argv) return true;
 
   for (i32 idx = 1; idx < argc; idx++) {
@@ -96,7 +84,7 @@ bool specs_answer_is_yes(
 }
 
 void specs_usage(
-  const c8 *program, const c8 *default_dest, FILE *out
+  const c8 *program, FILE *out
 ) {
   const c8 *base = nullptr;
   if (program) {
@@ -108,19 +96,18 @@ void specs_usage(
   fprintf(
     out ? out : stdout,
     "Usage: %s [options] [PATH]\n\n"
-    "Gather hardware/OS facts from system commands and write a ~/.specs\n"
-    "document (same bullet format as the existing file).\n\n"
+    "Gather hardware/OS facts from system commands and print a document\n"
+    "to stdout. No files are written unless PATH is supplied.\n\n"
     "Options:\n"
     "  -t, --truncate      Replace an existing file without asking\n"
     "  -y, --yes           Same as --truncate (assume yes)\n"
     "  -n, --dry-run       Print the document, write nothing\n"
-    "  -o, --output PATH   Write to PATH (default: %s)\n"
+    "  -o, --output PATH   Write to PATH instead of stdout\n"
     "  -h, --help          Show this help\n\n"
     "PATH as a positional argument is the same as -o PATH.\n\n"
     "If the destination already exists and neither -t nor -y was passed,\n"
     "you are asked before replacing it. Non-interactive stdin refuses to\n"
     "clobber without -t/-y.\n",
-    base,
-    default_dest ? default_dest : "$HOME/.specs"
+    base
   );
 }
